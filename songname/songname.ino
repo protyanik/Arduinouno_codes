@@ -8,6 +8,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 String songInfo = "";
 String albumInfo = "";
+String artistName ="";
 int progress = 0;
 bool newData = false;
 
@@ -37,11 +38,13 @@ void receiveSerial() {
         rawData += rc;
       } else {
         // Find the two pipes
+        int hype = rawData.indexOf('-');
         int firstPipe = rawData.indexOf('|');
         int secondPipe = rawData.lastIndexOf('|');
 
         if (firstPipe != -1 && secondPipe != -1) {
-          songInfo = rawData.substring(0, firstPipe);
+          songInfo = rawData.substring(0, hype);
+          artistName = rawData.substring(hype + 2, firstPipe);
           albumInfo = rawData.substring(firstPipe + 1, secondPipe);
           progress = rawData.substring(secondPipe + 1).toInt();
         }
@@ -65,14 +68,20 @@ void updateDisplay() {
   display.setCursor(0, 0);
   display.setTextWrap(false);
   // Optional: Center the album name
-  display.println("Now playing " + albumInfo);
+  display.println("Now playing " );
   display.drawLine(0, 10, 128, 10, WHITE); // Decorative line
 
   // 2. MIDDLE: Song & Artist
   display.setCursor(0, 18);
   display.setTextSize(1); // Keep at 1 if names are long, or 2 for short names
-  display.setTextWrap(true);
+  display.setTextWrap(false);
   display.println(songInfo);
+
+  //3. artist name
+  display.setCursor(0, 35);
+  display.setTextSize(1); // Keep at 1 if names are long, or 2 for short names
+  display.setTextWrap(true);
+  display.println(artistName);
  
 
   // 3. BOTTOM: Progress Bar
