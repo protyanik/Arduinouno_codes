@@ -63,14 +63,17 @@ void updateDisplay() {
   display.setTextSize(1);
   display.setTextColor(WHITE);
   display.setCursor(0, 0);
+  display.setTextWrap(false);
   // Optional: Center the album name
-  display.println(albumInfo);
+  display.println("Now playing " + albumInfo);
   display.drawLine(0, 10, 128, 10, WHITE); // Decorative line
 
   // 2. MIDDLE: Song & Artist
   display.setCursor(0, 18);
   display.setTextSize(1); // Keep at 1 if names are long, or 2 for short names
+  display.setTextWrap(true);
   display.println(songInfo);
+ 
 
   // 3. BOTTOM: Progress Bar
   int barWidth = 110;
@@ -81,6 +84,7 @@ void updateDisplay() {
   display.drawRect(barX, barY, barWidth, barHeight, WHITE);
   int fillWidth = map(progress, 0, 100, 0, barWidth - 4);
   display.fillRect(barX + 2, barY + 2, fillWidth, barHeight - 4, WHITE);
+  
 
   display.display();
 }
