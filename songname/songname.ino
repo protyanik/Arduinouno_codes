@@ -11,9 +11,12 @@ String albumInfo = "";
 String artistName ="";
 int progress = 0;
 bool newData = false;
+const int buttonPin = 2; 
+bool lastButtonState = HIGH;
 
 void setup() {
   Serial.begin(9600);
+  pinMode(buttonPin, INPUT_PULLUP); // Button pin
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display.clearDisplay();
 }
@@ -24,6 +27,15 @@ void loop() {
     updateDisplay();
     newData = false;
   }
+  // 2. Check the Physical Button
+  bool currentButtonState = digitalRead(buttonPin);
+  
+  // If the button is pressed (goes from HIGH to LOW)
+  if (lastButtonState == HIGH && currentButtonState == LOW) {
+    Serial.println("<TOGGLE>"); // Send command to Python
+    delay(200);                 // Simple debounce
+  }
+  lastButtonState = currentButtonState;
 }
 
 void receiveSerial() {
