@@ -14,14 +14,14 @@ int progress = 0;
 bool newData = false;
 
 // --- Variables for Controls ---
-const int buttonPin = 2;
+const int buttonPin = 3;
 const int potPin = A0;
 bool lastButtonState = HIGH;
 int lastVol = -1;
 const int volThreshold = 2; // Prevents "jitter"
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   pinMode(buttonPin, INPUT_PULLUP); 
   
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
@@ -59,7 +59,7 @@ void readVolume() {
   long sum = 0;
   for(int i = 0; i < 10; i++) { sum += analogRead(potPin); delay(1); }
   int avgPot = sum / 10;
-  int currentVol = map(avgPot, 0, 1023, 0, 100);
+  int currentVol = map(avgPot, 0, 1023, 100, 0);
 
   if (abs(currentVol - lastVol) >= volThreshold) {
     Serial.println(currentVol); // Send volume to Python

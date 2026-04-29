@@ -9,7 +9,7 @@ from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessi
 
 # --- CONFIGURATION ---
 PORT = 'COM3'  
-BAUD = 9600
+BAUD = 115200
 
 # 1. Initialize Serial ONCE
 try:
