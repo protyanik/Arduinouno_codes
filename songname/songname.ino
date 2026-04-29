@@ -6,34 +6,73 @@
 #define SCREEN_HEIGHT 64
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
-String songInfo = "";
+// --- Variables for Media Info ---
+String songInfo = "Waiting...";
+String artistName = "Spotify";
 String albumInfo = "";
-String artistName ="";
 int progress = 0;
 bool newData = false;
-const int buttonPin = 2; 
+
+// --- Variables for Controls ---
+const int buttonPin = 2;
+const int potPin = A0;
 bool lastButtonState = HIGH;
+int lastVol = -1;
+const int volThreshold = 2; // Prevents "jitter"
 
 void setup() {
   Serial.begin(9600);
-  pinMode(buttonPin, INPUT_PULLUP); // Button pin
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  pinMode(buttonPin, INPUT_PULLUP); 
+  
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    for(;;); // Don't proceed if OLED fails
+  }
+  
   display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(20, 25);
+  display.println("Bridge Connecting...");
+  display.display();
 }
 
 void loop() {
+  // 1. Handle Volume Knob (Potentiometer)
+  readVolume();
+
+  // 2. Handle Play/Pause (Button)
+  readButton();
+
+  // 3. Listen for Song Info from PC
   receiveSerial();
+
+  // 4. Update Screen if new data arrived
   if (newData) {
     updateDisplay();
-    newData = false;
+    newData = false; 
   }
-  // 2. Check the Physical Button
+}
+
+// --- HELPER FUNCTIONS ---
+
+void readVolume() {
+  long sum = 0;
+  for(int i = 0; i < 10; i++) { sum += analogRead(potPin); delay(1); }
+  int avgPot = sum / 10;
+  int currentVol = map(avgPot, 0, 1023, 0, 100);
+
+  if (abs(currentVol - lastVol) >= volThreshold) {
+    Serial.println(currentVol); // Send volume to Python
+    lastVol = currentVol;
+  }
+}
+
+void readButton() {
   bool currentButtonState = digitalRead(buttonPin);
-  
-  // If the button is pressed (goes from HIGH to LOW)
-  if (lastButtonState == HIGH && currentButtonState == LOW) {
+  // Detect "Falling Edge" (Button just got pressed)
+  if (currentButtonState == LOW && lastButtonState == HIGH) {
     Serial.println("<TOGGLE>"); // Send command to Python
-    delay(200);                 // Simple debounce
+    delay(200); // Simple debounce
   }
   lastButtonState = currentButtonState;
 }
@@ -49,14 +88,14 @@ void receiveSerial() {
       if (rc != '>') {
         rawData += rc;
       } else {
-        // Find the two pipes
-        int hype = rawData.indexOf('-');
+        // Parsing logic: <Song - Artist|Album|Progress>
+        int hyphen = rawData.indexOf('-');
         int firstPipe = rawData.indexOf('|');
         int secondPipe = rawData.lastIndexOf('|');
 
         if (firstPipe != -1 && secondPipe != -1) {
-          songInfo = rawData.substring(0, hype);
-          artistName = rawData.substring(hype + 2, firstPipe);
+          songInfo = rawData.substring(0, hyphen);
+          artistName = rawData.substring(hyphen + 2, firstPipe);
           albumInfo = rawData.substring(firstPipe + 1, secondPipe);
           progress = rawData.substring(secondPipe + 1).toInt();
         }
@@ -74,29 +113,23 @@ void receiveSerial() {
 void updateDisplay() {
   display.clearDisplay();
   
-  // 1. TOP: Album Name (Small, Dimmer look)
+  // Header
   display.setTextSize(1);
-  display.setTextColor(WHITE);
   display.setCursor(0, 0);
-  display.setTextWrap(false);
-  // Optional: Center the album name
-  display.println("Now playing " );
-  display.drawLine(0, 10, 128, 10, WHITE); // Decorative line
+  display.print("Now Playing");
+  display.drawLine(0, 10, 128, 10, WHITE);
 
-  // 2. MIDDLE: Song & Artist
+  // Song Title
   display.setCursor(0, 18);
-  display.setTextSize(1); // Keep at 1 if names are long, or 2 for short names
-  display.setTextWrap(false);
+  display.setTextSize(1);
   display.println(songInfo);
 
-  //3. artist name
-  display.setCursor(0, 35);
-  display.setTextSize(1); // Keep at 1 if names are long, or 2 for short names
-  display.setTextWrap(true);
+  // Artist
+  display.setCursor(0, 32);
+  display.print("By: ");
   display.println(artistName);
- 
 
-  // 3. BOTTOM: Progress Bar
+  // Progress Bar
   int barWidth = 110;
   int barHeight = 6;
   int barX = (128 - barWidth) / 2;
@@ -105,7 +138,6 @@ void updateDisplay() {
   display.drawRect(barX, barY, barWidth, barHeight, WHITE);
   int fillWidth = map(progress, 0, 100, 0, barWidth - 4);
   display.fillRect(barX + 2, barY + 2, fillWidth, barHeight - 4, WHITE);
-  
 
   display.display();
 }
