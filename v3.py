@@ -1,5 +1,6 @@
 import asyncio
 import serial
+import webbrowser
 import serial.tools.list_ports
 import time
 import pyautogui
@@ -12,7 +13,7 @@ from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessi
 BAUD_RATE = 9600
 # If you want to hardcode the port, change this to 'COM3' etc.
 # Otherwise, it will try to find it automatically.
-TARGET_PORT = None 
+TARGET_PORT = 'COM3'
 
 def find_arduino():
     """Attempts to find the Arduino port automatically."""
@@ -94,17 +95,18 @@ async def bridge_loop():
                 
                 elif raw_line == "<NEXT>":
                     pyautogui.press('nexttrack')
-                    print("[Action] Next Track")
-                
-                elif raw_line == "<custom>": #new botton added custo botton 1
-                    print("hello mah nigga")
-                
+                    print("[Action] Next Track" )
+
                 elif raw_line.isdigit():
                     vol_val = int(raw_line)
                     normalized_vol = max(0.0, min(1.0, vol_val / 100.0))
                     if volume_interface:
                         volume_interface.SetMasterVolumeLevelScalar(normalized_vol, None)
                         print(f"[Volume] {vol_val}%")
+
+                elif raw_line == "<CSTOM1>":
+                    webbrowser.open('https://www.youtube.com')
+                    
             except Exception as e:
                 print(f"[-] Read Error: {e}")
 
