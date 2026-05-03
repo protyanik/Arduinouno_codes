@@ -45,9 +45,9 @@ async def get_media_data():
             timeline = current_session.get_timeline_properties()
             
             if info:
-                title = info.title[:25] # Truncate for OLED space
+                title = info.title[:19] # Truncate for OLED space
                 artist = info.artist[:20]
-                album = info.album_title[:20] if info.album_title else "Single"
+                album = info.album_title[:15] if info.album_title else "Single"
                 
                 duration = timeline.end_time.total_seconds()
                 pos = timeline.position.total_seconds()
