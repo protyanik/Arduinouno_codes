@@ -7,7 +7,7 @@
 #define SCREEN_HEIGHT 64
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
-// --- Pin Definitions ---
+// --- Pin Definitions ---         // pin alocations add or remove pins here
 const int potPin = A0;
 const int playPausePin = 3;
 const int prevPin = 2;
@@ -38,11 +38,16 @@ void setup() {
   pinMode(customPin, INPUT_PULLUP);
 
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    for (;;)
-      ;  // Halt if OLED not found
+    Serial.println(F("SSD0136 allocation failed"));
+    for (;;);  // Halt if OLED not found
   }
 
-  showBootScreen();
+  display.clearDisplay();
+  display.setTextSize(2);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(10, 20);
+  display.println("READY...");
+  display.display();
 }
 
 void loop() {
@@ -129,20 +134,20 @@ void updateDisplay() {
   display.clearDisplay();
   display.setTextColor(WHITE);
 
-  // Song Title
+  // Song album name                        //album name update
   display.setTextSize(1);
   display.setCursor(0, 0);
-  display.println(songTitle);
+  display.println(albumName);
+
   display.drawLine(0, 12, 128, 12, WHITE);
 
-  // Artist & Album
+  // song name                              // Song name added
   display.setCursor(0, 20);
-  display.print("Artist: ");
-  display.println(artistName);
-
+  display.println(songTitle);
+// artist name                            // artist name added
   display.setCursor(0, 32);
-  display.print("Album: ");
-  display.println(albumName);
+  display.print("By:");
+  display.println(artistName);
 
   // Progress Bar
   int barWidth = 110;
@@ -157,10 +162,3 @@ void updateDisplay() {
   display.display();
 }
 
-void showBootScreen() {
-  display.clearDisplay();
-  display.setTextSize(2);
-  display.setCursor(10, 20);
-  display.println("READY...");
-  display.display();
-}
